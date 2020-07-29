@@ -6,8 +6,8 @@
 	const ID = 'JSMine',
 		timer = true,
 		hiscore = true,
-		mine_icon = 'mine.png',
-		flag_icon = 'flag.png',
+		mine_icon = 'src/mine.png',
+		flag_icon = 'src/flag.png',
 		colors = {
 			1: 'blue',
 			2: 'green',
@@ -397,25 +397,26 @@
 		
 		let virtual_cell = this.VIRTUAL_GRID[DOMcell.id];
 		
-		if(!virtual_cell) {
-			return;
+		//has to be a hidden cell or a mine cell to be flagged. 
+		if(virtual_cell && [MINE, HIDDEN].indexOf(virtual_cell.state) !== -1) {
+			
+			//this cell has already been flagged so we'll unflag it
+			if( virtual_cell.flagged ) {
+				DOMcell.innerHTML = '';
+				this.cell(virtual_cell, 'flagged', false)
+				this.MINES_LEFT++; 
+				this.FLAGGED--;
+			}
+			else {
+				DOMcell.innerHTML = this.FLAG_HTML; 
+				this.cell(virtual_cell, 'flagged', true);
+				this.MINES_LEFT--;
+				this.FLAGGED++;
+			}
+
+			update_mines(this.MINES_LEFT);
+			
 		}
-		
-		//this cell has already been flagged so we'll unflag it
-		if( virtual_cell.flagged ) {
-			DOMcell.innerHTML = '';
-			this.cell(virtual_cell, 'flagged', false)
-			this.MINES_LEFT++; 
-			this.FLAGGED--;
-		}
-		else {
-			DOMcell.innerHTML = this.FLAG_HTML; 
-			this.cell(virtual_cell, 'flagged', true);
-			this.MINES_LEFT--;
-			this.FLAGGED++;
-		}
-		
-		update_mines(this.MINES_LEFT);
 	}
 	
 	//get/set a cells property. Or multiple properties with an obj. By default returns state. 
