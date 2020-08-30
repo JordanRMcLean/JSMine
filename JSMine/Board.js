@@ -10,8 +10,6 @@ export class Board {
 		this.rows = rows;
 		this.columns = columns;
 		this.mines = mines;
-		this.mine_html = '<img src="' + Config.MINE_ICON + '" />';
-		this.flag_html = '<img src="' + Config.FLAG_ICON + '" />';
 
 		let holder = document.getElementById(Config.ID);
 		if(!holder) {
@@ -22,26 +20,16 @@ export class Board {
 		this.holder = holder;
 	}
 
-	add_ui() {
-		let id = Config.ID,
-		html = `<div id="${id}_ui">
-					<select id="${id}_difficulty">
-						<option value="beginner">Beginner (9x9)</option>
-						<option value="intermediate">Intermediate (16x16)</option>
-						<option value="advanced">Advanced (16x30)</option>
-					</select>
-					<input type="number" maxlength="2" id="${id}_rows" /> x
-					<input type="number" maxlength="2" id="${id}_columns" />
-					<input type="number" maxlength="3" id="${id}_mines" style="background-image:url(${Config.MINE_ICON})" />
-					<input type="button" value="New Game" id="${id}_newgame" />
-				</div>
-				<div id="${id}_table"></div>
-				<div id="${id}_footer">
-					Mines Left: <span id="${id}_minesleft"></span>
-					<span id="${id}_time" style="float:right"></span>
-				</div>`;
+	build_ui() {
+		import {Templates} from "./Templates.js";
 
-		this.holder.innerHTML = html;
+		let header = Templates.header(Config.ID, Config.MINE_ICON),
+			body = Templates.body(Config.ID),
+			footer = Templates.footer(Config.ID);
+
+		this.mine_html = Templates.mine(Config.MINE_ICON);
+		this.flag_html = Templates.flag(Config.FLAG_ICON);
+		this.holder.innerHTML = header + body + footer;
 
 		//add event listener for difficulty changer
 		document.getElementById(id + '_difficulty').addEventListener('change', e => {

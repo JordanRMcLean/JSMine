@@ -14,7 +14,7 @@ class JSMine {
 
 		//create first board.
 		this._board = new Board(...start_difficulty);
-		this._board.add_ui();
+		this._board.build_ui();
 
 		//add event listener for new game UI
 		document.getElementById(id + '_newgame').addEventListener('click', e => {
@@ -89,7 +89,7 @@ class JSMine {
 			this._board.add_game_time(`${mins}:${secs}s`);
 
 			if(Config.HISCORE) {
-				//check if hi score and save. 
+				//check if hi score and save.
 			}
 		}
 
@@ -109,6 +109,11 @@ class JSMine {
 			cell = this._game.get_cell(cell);
 		}
 
+		//this cell has been flagged and now clicked on, so we remove the flag.
+		if(cell.flagged) {
+			return this.flag_cell(cell);
+		}
+
 		let neighbours = this._game.get_cell_neighbours(cell),
 			surrounding_mines = 0,
 			identified_mines = 0;
@@ -125,11 +130,6 @@ class JSMine {
 				identified_mines++;
 			}
 		});
-
-		//this cell has been flagged and now clicked on, so we remove the flag.
-		if(cell.flagged) {
-			return this.flag_cell(cell);
-		}
 
 		//now lets action the cell based on its current state
 		switch(cell.state) {
