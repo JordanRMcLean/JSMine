@@ -1,15 +1,15 @@
 // JSMine Settings
 
 export const Config = {
-	
+
 	//Basic customizations
     ID: 'JSMine',
     TIMER: true,
     HISCORE: false,
 
     //image sources
-    MINE_ICON: 'mine.png',
-    FLAG_ICON: 'flag.png',
+    MINE_ICON: '/JSMine/mine.png',
+    FLAG_ICON: '/JSMine/flag.png',
 
     //Colours for numbered cells.
     COLORS: {
@@ -36,9 +36,9 @@ export const Config = {
     CELL_REVEALED: 2,
     CELL_EMPTY: 3,
     CELL_MINE: 4,
-	
-	//function for creating unique name for each cell on DOM and API. 
-	//In config as needs to be consistent throughout. 
+
+	//function for creating unique name for each cell on DOM and API.
+	//In config as needs to be consistent throughout.
 	CELL_ID: function(x, y) {
 		return this.ID + '_cell_' + x + '_' + y;
 	}

@@ -12,35 +12,42 @@ export class Board {
 		this.mines = mines;
 		this.mine_html = '<img src="' + Config.MINE_ICON + '" />';
 		this.flag_html = '<img src="' + Config.FLAG_ICON + '" />';
+
+		let holder = document.getElementById(Config.ID);
+		if(!holder) {
+			holder = document.createElement('div');
+			holder.id = Config.ID;
+			document.body.appendChild(holder);
+		}
+		this.holder = holder;
 	}
 
 	add_ui() {
-		if(!this.holder) {
-			this.holder = document.getElementById(Config.ID);
-		}
-
-		let id = Config.ID;
-
-		//urgh so ugly.
-		let html = `<div id="${id}_ui">
-						<select id="${id}_difficulty">
-							<option value="beginner">Beginner (9x9)</option>
-							<option value="intermediate">Intermediate (16x16)</option>
-							<option value="advanced">Advanced (16x30)</option>
-						</select>
-						<input type="number" maxlength="2" id="${id}_rows" /> x
-						<input type="number" maxlength="2" id="${id}_columns" />
-						<input type="number" maxlength="3" id="${id}_mines" style="background-image:url(${Config.MINE_ICON})" />
-						<input type="button" value="New Game" id="${id}_newgame" />
-					</div>
-					<div id="${id}_table"></div>
-					<div id="${id}_footer">Mines Left: <span id="${id}_minesleft"></span>
-						<span style="float:right">
-							<span id="${id}_time"></span>
-						</span>
-					</div>`;
+		let id = Config.ID,
+		html = `<div id="${id}_ui">
+					<select id="${id}_difficulty">
+						<option value="beginner">Beginner (9x9)</option>
+						<option value="intermediate">Intermediate (16x16)</option>
+						<option value="advanced">Advanced (16x30)</option>
+					</select>
+					<input type="number" maxlength="2" id="${id}_rows" /> x
+					<input type="number" maxlength="2" id="${id}_columns" />
+					<input type="number" maxlength="3" id="${id}_mines" style="background-image:url(${Config.MINE_ICON})" />
+					<input type="button" value="New Game" id="${id}_newgame" />
+				</div>
+				<div id="${id}_table"></div>
+				<div id="${id}_footer">
+					Mines Left: <span id="${id}_minesleft"></span>
+					<span id="${id}_time" style="float:right"></span>
+				</div>`;
 
 		this.holder.innerHTML = html;
+
+		//add event listener for difficulty changer
+		document.getElementById(id + '_difficulty').addEventListener('change', e => {
+			let difficulty = document.getElementById(id + '_difficulty').value;
+			this.update_ui( ...Config.DIFFICULTIES[difficulty] )
+		});
 	}
 
 	create_table(rows, columns) {

@@ -37,7 +37,7 @@ export class Game {
         let return_obj = {
             incorrect_flags: [],
             unrevealed_mines: [],
-            game_time: '',
+            game_time: 0,
         };
 
         if (lost) {
@@ -50,12 +50,8 @@ export class Game {
 
         //record the time. vs hiscore
         if (Config.TIMER) {
-            let end = new Date(),
-                diff = (end - this.game_start_time) / 1000,
-                mins = Math.floor(diff / 60) % 60,
-                secs = Math.floor(diff % 60);
-
-                return_obj.game_time = `${mins}:${secs}s`;
+            let end = new Date();
+			return_obj.game_time = (end - this.game_start_time) / 1000;
         }
 
 		//TODO: Save the time to compare hiscore?
@@ -71,10 +67,8 @@ export class Game {
         for (; j < this.rows; j++) {
 
             for (let k = 0; k < this.columns; k++) {
-
                 let cell = new Cell(j, k, Config.CELL_HIDDEN);
                 this.virtual_grid[ Config.CELL_ID(j, k) ] = cell;
-
             }
 
         }

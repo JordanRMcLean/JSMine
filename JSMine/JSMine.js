@@ -8,14 +8,12 @@ import {Board} from './Board.js';
 
 class JSMine {
 	constructor(id) {
-		this.ID = id;
-		this.game = null;
 
 		//TODO: load from localStorage to save difficulty?
 		let start_difficulty = Config.DIFFICULTIES.beginner;
 
 		//create first board.
-		this._board = new Board(Config, ...start_difficulty);
+		this._board = new Board(...start_difficulty);
 		this._board.add_ui();
 
 		//add event listener for new game UI
@@ -25,12 +23,6 @@ class JSMine {
 				+document.getElementById(id + '_columns').value,
 				+document.getElementById(id + '_mines').value
 			)
-		});
-
-		//add event listener to difficulty ui
-		document.getElementById(id + '_difficulty').addEventListener('change', e => {
-			let difficulty = document.getElementById(id + '_difficulty').value;
-			this._board.update_ui( ...Config.DIFFICULTIES[difficulty] )
 		});
 
 		this.new_game( ...start_difficulty );
@@ -43,9 +35,9 @@ class JSMine {
 			return;
 		}
 
-		//validate the options, setting a minimum and maximum for all options.
-		let maximum_mines = (rows - 1) * (columns - 1),
-			minimum_mines = Math.round((rows * columns) * 0.1); //minimum mines is 10% of total cells.
+		//validate mines, rows and columns
+		let maximum_mines = (rows - 1) * (columns - 1);
+		let minimum_mines = Math.round((rows * columns) * 0.1); //minimum mines is 10% of total cells.
 		mines = Math.min(mines, maximum_mines);
 		mines = Math.max(mines, minimum_mines);
 
@@ -59,9 +51,11 @@ class JSMine {
 		this._board.update_mines(mines);
 		let cells = this._board.create_table(rows, columns);
 
+		//delete any old instance of a game.
 		delete this._game;
 		this._game = new Game(rows, columns, mines);
 
+		//add the event listeners to the cells.
 		Array.from(cells).forEach(cell => {
 			cell.addEventListener('click', e => {
 				this.action_cell(cell.id, e)
@@ -72,10 +66,6 @@ class JSMine {
 				this.flag_cell(cell.id, e)
 			})
 		})
-	}
-
-	start_game(first_cell) {
-		this._game.start(first_cell);
 	}
 
 	finish_game(lost) {
@@ -92,8 +82,15 @@ class JSMine {
 		})
 
 		//add game time.
-		if(game_time.length > 0) {
-			this._board.add_game_time(game_time);
+		if(game_time > 0) {
+			let mins = Math.floor(game_time / 60) % 60,
+				secs = Math.floor(game_time % 60);
+
+			this._board.add_game_time(`${mins}:${secs}s`);
+
+			if(Config.HISCORE) {
+				//check if hi score and save. 
+			}
 		}
 
 		//TODO: some sort of 'Won' animation
@@ -101,7 +98,7 @@ class JSMine {
 
 	action_cell(cell) {
 		if(!this._game || !this._game.started) {
-			this.start_game(cell);
+			this._game.start(cell);
 		}
 
 		if(this._game.finished) {
@@ -176,7 +173,7 @@ class JSMine {
 				break;
 
 			case Config.CELL_MINE:
-				//if this mine hasn't been flagged... uh oh you just clicked a mine. 
+				//if this mine hasn't been flagged... uh oh you just clicked a mine.
 				if( !cell.flagged ) {
 					this._board.reveal_cell(cell);
 					this.finish_game(true);
