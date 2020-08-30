@@ -4,6 +4,7 @@
 //TODO: update dynamic difficulties creation.
 
 import {Config} from './Config.js';
+import {Templates} from './Templates.js';
 
 export class Board {
 	constructor(rows, columns, mines) {
@@ -21,8 +22,6 @@ export class Board {
 	}
 
 	build_ui() {
-		import {Templates} from "./Templates.js";
-
 		let header = Templates.header(Config.ID, Config.MINE_ICON),
 			body = Templates.body(Config.ID),
 			footer = Templates.footer(Config.ID);
