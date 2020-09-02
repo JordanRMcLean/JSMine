@@ -54,8 +54,6 @@ export class Game {
 			return_obj.game_time = (end - this.game_start_time) / 1000;
         }
 
-		//TODO: Save the time to compare hiscore?
-
 		return return_obj;
     }
 

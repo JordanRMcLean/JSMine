@@ -1,19 +1,16 @@
 // core.js
-//require: Cell.js, Game.js, Board.js
 
 import {Config} from './Config.js';
-import {Cell} from './Cell.js';
 import {Game} from './Game.js';
 import {Board} from './Board.js';
 
 class JSMine {
 	constructor(id) {
-
-		//TODO: load from localStorage to save difficulty?
-		let start_difficulty = Config.DIFFICULTIES.beginner;
+		this.load_data();
+		let start_board = Config.DIFFICULTIES[ Config.SAVEFILE.difficulty ];
 
 		//create first board.
-		this._board = new Board(...start_difficulty);
+		this._board = new Board(...start_board);
 		this._board.build_ui();
 
 		//add event listener for new game UI
@@ -25,7 +22,7 @@ class JSMine {
 			)
 		});
 
-		this.new_game( ...start_difficulty );
+		this.new_game( ...start_board );
 
 		//TODO: if hiscore load hiscore and display?
 	}
@@ -66,6 +63,9 @@ class JSMine {
 				this.flag_cell(cell.id, e)
 			})
 		})
+
+		//lastly save the board size to reload.
+		this.save_data();
 	}
 
 	finish_game(lost) {
@@ -82,18 +82,20 @@ class JSMine {
 		})
 
 		//add game time.
-		if(game_time > 0) {
-			let mins = Math.floor(game_time / 60) % 60,
-				secs = Math.floor(game_time % 60);
+		if(Config.TIMER && game_time > 0) {
+			let difficulty = this._board.get_selected_difficulty();
+			this._board.add_game_time(game_time);
 
-			this._board.add_game_time(`${mins}:${secs}s`);
+			if(!lost && Config.HISCORE && difficulty !== 'custom') {
 
-			if(Config.HISCORE) {
-				//check if hi score and save.
+				//NEW HI SCORE :)
+				if(game_time < Config.SAVEFILE.hiscores[difficulty]) {
+					Config.SAVEFILE.hiscores[difficulty] = game_time;
+					this._board.add_game_time(game_time, true);
+					this.save_data();
+				}
 			}
 		}
-
-		//TODO: some sort of 'Won' animation
 	}
 
 	action_cell(cell) {
@@ -183,7 +185,7 @@ class JSMine {
 
 	flag_cell(cell) {
 		//if the game hasn't started, do nothing
-		if(this._game.finished || !this._game.started) {
+		if(this._game.finished || !this._game.started || this._game.mines_left === 0) {
 			return;
 		}
 
@@ -198,6 +200,31 @@ class JSMine {
 		}
 
 		this._board.update_mines(this._game.mines_left);
+	}
+
+	save_data() {
+		let difficulty = this._board.get_selected_difficulty();
+
+		if(difficulty !== 'custom') {
+			Config.SAVEFILE.difficulty = difficulty;
+		}
+
+		localStorage.setItem('JSMine', JSON.stringify(Config.SAVEFILE));
+	}
+
+	load_data() {
+		let data = localStorage.getItem('JSMine');
+		if(data) {
+			data = JSON.parse(data);
+
+			if(data.difficulty) {
+				Config.SAVEFILE.difficulty = data.difficulty;
+			}
+
+			if(data.hiscores) {
+				Config.SAVEFILE.hiscores = data.hiscores;
+			}
+		}
 	}
 
 }

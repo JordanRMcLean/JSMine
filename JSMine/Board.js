@@ -22,18 +22,33 @@ export class Board {
 	}
 
 	build_ui() {
-		let header = Templates.header(Config.ID, Config.MINE_ICON),
-			body = Templates.body(Config.ID),
-			footer = Templates.footer(Config.ID);
+		let id = Config.ID,
+			header = Templates.header(id, Config.MINE_ICON),
+			body = Templates.body(id, Config.MINE_ICON),
+			footer = Templates.footer(id, Config.MINE_ICON);
 
 		this.mine_html = Templates.mine(Config.MINE_ICON);
 		this.flag_html = Templates.flag(Config.FLAG_ICON);
 		this.holder.innerHTML = header + body + footer;
 
+		document.getElementById(id + '_difficulty').value = Config.SAVEFILE.difficulty;
+
+		let hiscore = Config.SAVEFILE.hiscores[ Config.SAVEFILE.difficulty ];
+		this.add_game_time(hiscore, 1);
+
 		//add event listener for difficulty changer
 		document.getElementById(id + '_difficulty').addEventListener('change', e => {
-			let difficulty = document.getElementById(id + '_difficulty').value;
-			this.update_ui( ...Config.DIFFICULTIES[difficulty] )
+			let difficulty = this.get_selected_difficulty(),
+				options = document.getElementById(Config.ID + '_options');
+
+			if(difficulty !== 'custom') {
+				options.style.display = 'none';
+				this.update_ui( ...Config.DIFFICULTIES[difficulty] );
+				this.add_game_time(Config.SAVEFILE.hiscores[ difficulty ], 1);
+			}
+			else {
+				options.style.display = '';
+			}
 		});
 	}
 
@@ -67,10 +82,17 @@ export class Board {
 		document.getElementById(Config.ID + '_rows').value = rows;
 		document.getElementById(Config.ID + '_columns').value = columns;
 		document.getElementById(Config.ID + '_mines').value = mines;
+		this.rows = rows;
+		this.columns = columns;
+		this.mines = mines;
 	}
 
 	update_mines(mines) {
 		document.getElementById(Config.ID + '_minesleft').innerHTML = mines;
+	}
+
+	get_selected_difficulty() {
+		return document.getElementById(Config.ID + '_difficulty').value;
 	}
 
 	//this does not action a cell, simply only reveals it. ALl other actions must take part elsewhere.
@@ -102,8 +124,15 @@ export class Board {
 		}
 	}
 
-	add_game_time(text) {
-		document.getElementById(Config.ID + '_time').innerHTML = text;
+	add_game_time(seconds, hiscore) {
+		let text = this.format_time(seconds);
+
+		if(hiscore) {
+			document.getElementById(Config.ID + '_hiscore').innerHTML = text;
+		}
+		else {
+			document.getElementById(Config.ID + '_time').innerHTML = text;
+		}
 	}
 
 	add_class(cell, classname) {
@@ -116,5 +145,16 @@ export class Board {
 
 	color_cell(number) {
 		return '<span style="color: ' + Config.COLORS[number] + '">' + number + '</span>';
+	}
+
+	format_time(seconds) {
+		let mins = Math.floor(seconds / 60) % 60,
+			secs = Math.floor(seconds % 60);
+
+		if(secs < 10) {
+			secs = '0' + secs; 
+		}
+
+		return `${mins}:${secs}s`;
 	}
 }
