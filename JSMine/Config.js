@@ -2,9 +2,8 @@
 
 export const Config = {
 
-	//Basic customizations
+    //Basic customizations
     ID: 'JSMine',
-    TIMER: true,
     HISCORE: true,
 
     //image sources
@@ -24,7 +23,7 @@ export const Config = {
     },
 
     // [height, width, mines]
-	//adding a new difficulty here will also need adding within the templates.
+    //adding a new difficulty here will also need adding within the templates.
     DIFFICULTIES: {
         beginner: [9, 9, 10],
         intermediate: [16, 16, 40],
@@ -37,19 +36,19 @@ export const Config = {
     CELL_EMPTY: 3,
     CELL_MINE: 4,
 
-	//default values saved.
-	SAVEFILE: {
-		difficulty : 'beginner',
-		hiscores : {
-			beginner : 999999,
-			intermediate : 999999,
-			advanced : 999999
-		}
-	},
+    //default values saved.
+    SAVEFILE: {
+        difficulty : 'beginner',
+        hiscores : {
+            beginner : 999999,
+            intermediate : 999999,
+            advanced : 999999
+        }
+    },
 
-	//function for creating unique name for each cell on DOM and API.
-	//In config as needs to be consistent throughout.
-	CELL_ID: function(x, y) {
-		return this.ID + '_cell_' + x + '_' + y;
-	}
+    //function for creating unique name for each cell on DOM and API.
+    //In config as needs to be consistent throughout.
+    CELL_ID: function(x, y) {
+        return this.ID + '_cell_' + x + '_' + y;
+    }
 }

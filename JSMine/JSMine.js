@@ -4,228 +4,229 @@ import {Config} from './Config.js';
 import {Game} from './Game.js';
 import {Board} from './Board.js';
 
-class JSMine {
-	constructor(id) {
-		this.load_data();
-		let start_board = Config.DIFFICULTIES[ Config.SAVEFILE.difficulty ];
+class JSMine{
+    constructor(id) {
+        this.load_data();
+        let start_board = Config.DIFFICULTIES[ Config.SAVEFILE.difficulty ];
 
-		//create first board.
-		this._board = new Board(...start_board);
-		this._board.build_ui();
+        //create first board.
+        this._board = new Board(...start_board);
+        this._board.build_ui();
 
-		//add event listener for new game UI
-		document.getElementById(id + '_newgame').addEventListener('click', e => {
-			this.new_game(
-				+document.getElementById(id + '_rows').value,
-				+document.getElementById(id + '_columns').value,
-				+document.getElementById(id + '_mines').value
-			)
-		});
+        //add event listener for new game UI
+        document.getElementById(id + '_newgame').addEventListener('click', e => {
+            this.new_game(
+                +document.getElementById(id + '_rows').value,
+                +document.getElementById(id + '_columns').value,
+                +document.getElementById(id + '_mines').value
+            )
+        });
 
-		this.new_game( ...start_board );
+        this.new_game( ...start_board );
+    }
 
-		//TODO: if hiscore load hiscore and display?
-	}
+    new_game(rows, columns, mines) {
+        if([rows, columns, mines].filter(i => typeof i === 'number').length !== 3) {
+            return;
+        }
 
-	new_game(rows, columns, mines) {
-		if([rows, columns, mines].filter(i => typeof i === 'number').length !== 3) {
-			return;
-		}
+        //validate mines, rows and columns
+        let maximum_mines = (rows - 1) * (columns - 1);
 
-		//validate mines, rows and columns
-		let maximum_mines = (rows - 1) * (columns - 1);
-		let minimum_mines = Math.round((rows * columns) * 0.1); //minimum mines is 10% of total cells.
-		mines = Math.min(mines, maximum_mines);
-		mines = Math.max(mines, minimum_mines);
+        //minimum mines is 10% of total cells.
+        let minimum_mines = Math.round((rows * columns) * 0.1);
 
-		//minimum value of 5 and max of 100 for rows and columns.
-		rows = Math.max(5, rows);
-		rows = Math.min(100, rows);
-		columns = Math.max(5, columns);
-		columns = Math.min(100, columns);
+        mines = Math.min(mines, maximum_mines);
+        mines = Math.max(mines, minimum_mines);
 
-		this._board.update_ui(rows, columns, mines);
-		this._board.update_mines(mines);
-		let cells = this._board.create_table(rows, columns);
+        //minimum value of 5 and max of 100 for rows and columns.
+        rows = Math.max(5, rows);
+        rows = Math.min(100, rows);
+        columns = Math.max(5, columns);
+        columns = Math.min(100, columns);
 
-		//delete any old instance of a game.
-		delete this._game;
-		this._game = new Game(rows, columns, mines);
+        this._board.update_ui(rows, columns, mines);
+        this._board.update_mines(mines);
+        let cells = this._board.create_table(rows, columns);
 
-		//add the event listeners to the cells.
-		Array.from(cells).forEach(cell => {
-			cell.addEventListener('click', e => {
-				this.action_cell(cell.id, e)
-			});
+        //delete any old instance of a game.
+        delete this._game;
+        this._game = new Game(rows, columns, mines);
 
-			cell.addEventListener('contextmenu', e => {
-				e.preventDefault();
-				this.flag_cell(cell.id, e)
-			})
-		})
+        //add the event listeners to the cells.
+        Array.from(cells).forEach(cell => {
+            cell.addEventListener('click', e => {
+                this.action_cell(cell.id, e)
+            });
 
-		//lastly save the board size to reload.
-		this.save_data();
-	}
+            cell.addEventListener('contextmenu', e => {
+                e.preventDefault();
+                this.flag_cell(cell.id, e)
+            })
+        })
 
-	finish_game(lost) {
-		let { incorrect_flags, unrevealed_mines, game_time } = this._game.end(lost);
+        //lastly save the board size to reload.
+        this.save_data();
+    }
 
-		//reveal incorrect flags.
-		incorrect_flags.forEach(cell => {
-			this._board.add_class(cell, 'incorrect');
-		});
+    finish_game(lost) {
+        let { incorrect_flags, unrevealed_mines, game_time } = this._game.end(lost);
 
-		//reveal unrevealed mines
-		unrevealed_mines.forEach(cell => {
-			this._board.reveal_cell(cell);
-		})
+        //reveal incorrect flags.
+        incorrect_flags.forEach(cell => {
+            this._board.add_class(cell, 'incorrect');
+        });
 
-		//add game time.
-		if(Config.TIMER && game_time > 0) {
-			let difficulty = this._board.get_selected_difficulty();
-			this._board.add_game_time(game_time);
+        //reveal unrevealed mines
+        unrevealed_mines.forEach(cell => {
+            this._board.reveal_cell(cell);
+        })
 
-			if(!lost && Config.HISCORE && difficulty !== 'custom') {
+        //add game time.
+        if(Config.HISCORE && game_time > 0) {
+            let difficulty = this._board.get_selected_difficulty();
+            this._board.add_game_time(game_time);
 
-				//NEW HI SCORE :)
-				if(game_time < Config.SAVEFILE.hiscores[difficulty]) {
-					Config.SAVEFILE.hiscores[difficulty] = game_time;
-					this._board.add_game_time(game_time, true);
-					this.save_data();
-				}
-			}
-		}
-	}
+            if(!lost && difficulty !== 'custom') {
 
-	action_cell(cell) {
-		if(!this._game || !this._game.started) {
-			this._game.start(cell);
-		}
+                //NEW HI SCORE :)
+                if(game_time < Config.SAVEFILE.hiscores[difficulty]) {
+                    Config.SAVEFILE.hiscores[difficulty] = game_time;
+                    this._board.add_game_time(game_time, true);
+                    this.save_data();
+                }
+            }
+        }
+    }
 
-		if(this._game.finished) {
-			return;
-		}
+    action_cell(cell) {
+        if(!this._game || !this._game.started) {
+            this._game.start(cell);
+        }
 
-		if(typeof cell === 'string') {
-			cell = this._game.get_cell(cell);
-		}
+        if(this._game.finished) {
+            return;
+        }
 
-		//this cell has been flagged and now clicked on, so we remove the flag.
-		if(cell.flagged) {
-			return this.flag_cell(cell);
-		}
+        if(typeof cell === 'string') {
+            cell = this._game.get_cell(cell);
+        }
 
-		let neighbours = this._game.get_cell_neighbours(cell),
-			surrounding_mines = 0,
-			identified_mines = 0;
+        //this cell has been flagged and now clicked on, so we remove the flag.
+        if(cell.flagged) {
+            return this.flag_cell(cell);
+        }
 
-		//count the mines surrounding this cell.
-		neighbours.forEach(neighbour_cell => {
-			let cell = this._game.get_cell(neighbour_cell);
+        let neighbours = this._game.get_cell_neighbours(cell),
+            surrounding_mines = 0,
+            identified_mines = 0;
 
-			if(cell.state === Config.CELL_MINE) {
-				surrounding_mines++;
-			}
+        //count the mines surrounding this cell.
+        neighbours.forEach(neighbour_cell => {
+            let cell = this._game.get_cell(neighbour_cell);
 
-			if(cell.flagged) {
-				identified_mines++;
-			}
-		});
+            if(cell.state === Config.CELL_MINE) {
+                surrounding_mines++;
+            }
 
-		//now lets action the cell based on its current state
-		switch(cell.state) {
-			case Config.CELL_HIDDEN:
-				cell.mines = surrounding_mines;
-				cell.state = Config.CELL_REVEALED;
-				this._board.reveal_cell(cell);
-				this._game.cells_left--;
+            if(cell.flagged) {
+                identified_mines++;
+            }
+        });
 
-				//this cell has no mines around it and therefore is empty... reveal all its neighbours
-				if(surrounding_mines === 0) {
-					cell.state = Config.CELL_EMPTY;
-					neighbours.forEach(neighbour => {
-						this.action_cell(neighbour);
-					});
-				}
+        //now lets action the cell based on its current state
+        switch(cell.state) {
+            case Config.CELL_HIDDEN:
+                cell.mines = surrounding_mines;
+                cell.state = Config.CELL_REVEALED;
+                this._board.reveal_cell(cell);
+                this._game.cells_left--;
 
-				//all cells have been revealed with no mines hit. Game won
-				if(this._game.cells_left <= 0) {
-					this.finish_game();
-				}
-				break;
+                //this cell has no mines around it and therefore is empty... reveal all its neighbours
+                if(surrounding_mines === 0) {
+                    cell.state = Config.CELL_EMPTY;
+                    neighbours.forEach(neighbour => {
+                        this.action_cell(neighbour);
+                    });
+                }
 
-			case Config.CELL_REVEALED:
-				//If a cell has already been revealed, technically nothing to do, however...
-				//this provides the shortcut by which when you click a revealed cell which you have already flagged all its mines
-				//the unrevealed cells around it will be revealed. Good for speed.
-				if(identified_mines >= surrounding_mines) {
-					neighbours.forEach(neighbour => {
-						let cell = this._game.get_cell(neighbour);
+                //all cells have been revealed with no mines hit. Game won
+                if(this._game.cells_left <= 0) {
+                    this.finish_game();
+                }
+                break;
 
-						//if its a hidden cell, or a mine and has not been flagged, reveal it
-						if(cell.state === Config.CELL_HIDDEN || cell.state === Config.CELL_MINE) {
-							if( !cell.flagged ) {
-								this.action_cell(cell);
-							}
-						}
+            case Config.CELL_REVEALED:
+                //If a cell has already been revealed, technically nothing to do, however...
+                //this provides the shortcut by which when you click a revealed cell which you have already flagged all its mines
+                //the unrevealed cells around it will be revealed. Good for speed.
+                if(identified_mines >= surrounding_mines) {
+                    neighbours.forEach(neighbour => {
+                        let cell = this._game.get_cell(neighbour);
 
-					});
-				}
-				break;
+                        //if its a hidden cell, or a mine and has not been flagged, reveal it
+                        if(cell.state === Config.CELL_HIDDEN || cell.state === Config.CELL_MINE) {
+                            if( !cell.flagged ) {
+                                this.action_cell(cell);
+                            }
+                        }
 
-			case Config.CELL_MINE:
-				//if this mine hasn't been flagged... uh oh you just clicked a mine.
-				if( !cell.flagged ) {
-					this._board.reveal_cell(cell);
-					this.finish_game(true);
-				}
-		}
-	}
+                    });
+                }
+                break;
 
-	flag_cell(cell) {
-		//if the game hasn't started, do nothing
-		if(this._game.finished || !this._game.started || this._game.mines_left === 0) {
-			return;
-		}
+            case Config.CELL_MINE:
+                //if this mine hasn't been flagged... uh oh you just clicked a mine.
+                if( !cell.flagged ) {
+                    this._board.reveal_cell(cell);
+                    this.finish_game(true);
+                }
+        }
+    }
 
-		if(typeof cell === 'string') {
-			cell = this._game.get_cell(cell);
-		}
+    flag_cell(cell) {
+        //if the game hasn't started, do nothing
+        if(this._game.finished || !this._game.started || this._game.mines_left === 0) {
+            return;
+        }
 
-		if(cell.state === Config.CELL_HIDDEN || cell.state === Config.CELL_MINE) {
-			cell.flagged = !cell.flagged;
-			this._board.flag(cell);
-			cell.flagged ? --this._game.mines_left : this._game.mines_left++;
-		}
+        if(typeof cell === 'string') {
+            cell = this._game.get_cell(cell);
+        }
 
-		this._board.update_mines(this._game.mines_left);
-	}
+        if(cell.state === Config.CELL_HIDDEN || cell.state === Config.CELL_MINE) {
+            cell.flagged = !cell.flagged;
+            this._board.flag(cell);
+            cell.flagged ? --this._game.mines_left : this._game.mines_left++;
+        }
 
-	save_data() {
-		let difficulty = this._board.get_selected_difficulty();
+        this._board.update_mines(this._game.mines_left);
+    }
 
-		if(difficulty !== 'custom') {
-			Config.SAVEFILE.difficulty = difficulty;
-		}
+    save_data() {
+        let difficulty = this._board.get_selected_difficulty();
 
-		localStorage.setItem('JSMine', JSON.stringify(Config.SAVEFILE));
-	}
+        if(difficulty !== 'custom') {
+            Config.SAVEFILE.difficulty = difficulty;
+        }
 
-	load_data() {
-		let data = localStorage.getItem('JSMine');
-		if(data) {
-			data = JSON.parse(data);
+        localStorage.setItem('JSMine', JSON.stringify(Config.SAVEFILE));
+    }
 
-			if(data.difficulty) {
-				Config.SAVEFILE.difficulty = data.difficulty;
-			}
+    load_data() {
+        let data = localStorage.getItem('JSMine');
+        if(data) {
+            data = JSON.parse(data);
 
-			if(data.hiscores) {
-				Config.SAVEFILE.hiscores = data.hiscores;
-			}
-		}
-	}
+            if(data.difficulty) {
+                Config.SAVEFILE.difficulty = data.difficulty;
+            }
+
+            if(data.hiscores) {
+                Config.SAVEFILE.hiscores = data.hiscores;
+            }
+        }
+    }
 
 }
 

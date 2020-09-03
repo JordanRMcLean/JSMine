@@ -25,7 +25,7 @@ export class Game {
         this.started = true;
         this.finished = false;
         this.create_virtual_grid(first_cell);
-        if (Config.TIMER) {
+        if (Config.HISCORE) {
             this.game_start_time = new Date();
         }
     }
@@ -49,12 +49,12 @@ export class Game {
         }
 
         //record the time. vs hiscore
-        if (Config.TIMER) {
+        if (Config.HISCORE) {
             let end = new Date();
-			return_obj.game_time = (end - this.game_start_time) / 1000;
+            return_obj.game_time = (end - this.game_start_time) / 1000;
         }
 
-		return return_obj;
+        return return_obj;
     }
 
     create_virtual_grid(first_cell) {
