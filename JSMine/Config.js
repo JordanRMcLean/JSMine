@@ -4,7 +4,7 @@ export const Config = {
 
     //Basic customizations
     ID: 'JSMine',
-    HISCORE: true,
+    HISCORE: false,
 
     //image sources
     MINE_ICON: '/JSMine/mine.png',
